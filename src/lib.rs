@@ -13,6 +13,14 @@
 //! ffmpeg-wasi = "0"
 //! ```
 
+#![allow(
+    non_camel_case_types,
+    clashing_extern_declarations,
+    non_upper_case_globals,
+    non_snake_case,
+    improper_ctypes
+)]
+
 pub mod avcodec;
 pub mod avfilter;
 pub mod avformat;
@@ -25,8 +33,10 @@ use std::alloc::{GlobalAlloc, Layout};
 ///
 /// Can be set as a global allocator with:
 ///
+/// ```rust
 /// #[global_allocator]
 /// static ALLOCATOR: FFMpegAllocator = FFMpegAllocator;
+/// ```
 pub struct FFMpegAllocator;
 
 unsafe impl GlobalAlloc for FFMpegAllocator {

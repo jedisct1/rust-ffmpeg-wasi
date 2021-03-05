@@ -29,9 +29,9 @@ pub mod swscale;
 
 use std::alloc::{GlobalAlloc, Layout};
 
-/// Allocator backed by ffmpeg memory allocation funnctions
+/// Allocator backed by the ffmpeg memory allocation functions.
 ///
-/// Can be set as a global allocator with:
+/// Must be set as a global allocator with:
 ///
 /// ```rust
 /// #[global_allocator]

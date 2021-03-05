@@ -1,0 +1,14 @@
+[package]
+name = "ffmpeg-wasi"
+version = "0.1.7"
+authors = ["Frank Denis <github@pureftpd.org>"]
+edition = "2018"
+description = "FFMPEG for WebAssembly/WASI"
+categories = ["wasm"]
+homepage = "https://github.com/jedisct1/rust-ffmpeg-wasi"
+repository = "https://github.com/jedisct1/rust-ffmpeg-wasi"
+keywords = ["ffmpeg", "libavcodec", "libavformat", "wasi", "wasm"]
+license = "MIT"
+readme = "README.md"
+
+[dependencies]

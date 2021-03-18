@@ -4,6 +4,8 @@ This crate bundles FFMPEG's libraries, precompiled for WebAssembly. No native in
 
 Compatible with Fastly's Compute@Edge.
 
+Includes VP9 and AV1 encoders.
+
 These are *low-level* bindings, directly exposing the original C functions to Rust.
 
 ## Usage

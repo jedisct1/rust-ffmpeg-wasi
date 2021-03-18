@@ -186,7 +186,7 @@ pub const EXIT_FAILURE: u32 = 1;
 pub const EXIT_SUCCESS: u32 = 0;
 pub const RAND_MAX: u32 = 2147483647;
 pub const LIBAVUTIL_VERSION_MAJOR: u32 = 56;
-pub const LIBAVUTIL_VERSION_MINOR: u32 = 67;
+pub const LIBAVUTIL_VERSION_MINOR: u32 = 68;
 pub const LIBAVUTIL_VERSION_MICRO: u32 = 100;
 pub const AV_HAVE_BIGENDIAN: u32 = 0;
 pub const AV_HAVE_FAST_UNALIGNED: u32 = 0;
@@ -329,7 +329,7 @@ pub const FF_DECODE_ERROR_MISSING_REFERENCE: u32 = 2;
 pub const FF_DECODE_ERROR_CONCEALMENT_ACTIVE: u32 = 4;
 pub const FF_DECODE_ERROR_DECODE_SLICES: u32 = 8;
 pub const LIBAVCODEC_VERSION_MAJOR: u32 = 58;
-pub const LIBAVCODEC_VERSION_MINOR: u32 = 129;
+pub const LIBAVCODEC_VERSION_MINOR: u32 = 133;
 pub const LIBAVCODEC_VERSION_MICRO: u32 = 100;
 pub const AV_PKT_FLAG_KEY: u32 = 1;
 pub const AV_PKT_FLAG_CORRUPT: u32 = 2;
@@ -347,6 +347,7 @@ pub const AV_CODEC_CAP_CHANNEL_CONF: u32 = 1024;
 pub const AV_CODEC_CAP_FRAME_THREADS: u32 = 4096;
 pub const AV_CODEC_CAP_SLICE_THREADS: u32 = 8192;
 pub const AV_CODEC_CAP_PARAM_CHANGE: u32 = 16384;
+pub const AV_CODEC_CAP_OTHER_THREADS: u32 = 32768;
 pub const AV_CODEC_CAP_AUTO_THREADS: u32 = 32768;
 pub const AV_CODEC_CAP_VARIABLE_FRAME_SIZE: u32 = 65536;
 pub const AV_CODEC_CAP_AVOID_PROBING: u32 = 131072;
@@ -398,6 +399,7 @@ pub const AV_CODEC_EXPORT_DATA_PRFT: u32 = 2;
 pub const AV_CODEC_EXPORT_DATA_VIDEO_ENC_PARAMS: u32 = 4;
 pub const AV_CODEC_EXPORT_DATA_FILM_GRAIN: u32 = 8;
 pub const AV_GET_BUFFER_FLAG_REF: u32 = 1;
+pub const AV_GET_ENCODE_BUFFER_FLAG_REF: u32 = 1;
 pub const FF_COMPRESSION_DEFAULT: i32 = -1;
 pub const FF_PRED_LEFT: u32 = 0;
 pub const FF_PRED_PLANE: u32 = 1;
@@ -4826,7 +4828,6 @@ pub struct AVBufferRef {
     #[doc = " this is the only reference to the buffer, in which case"]
     #[doc = " av_buffer_is_writable() returns 1."]
     pub data: *mut u8,
-    #[doc = " Size of data in bytes."]
     pub size: ::std::os::raw::c_int,
 }
 impl Default for AVBufferRef {
@@ -4835,30 +4836,12 @@ impl Default for AVBufferRef {
     }
 }
 extern "C" {
-    #[doc = " Allocate an AVBuffer of the given size using av_malloc()."]
-    #[doc = ""]
-    #[doc = " @return an AVBufferRef of given size or NULL when out of memory"]
     pub fn av_buffer_alloc(size: ::std::os::raw::c_int) -> *mut AVBufferRef;
 }
 extern "C" {
-    #[doc = " Same as av_buffer_alloc(), except the returned buffer will be initialized"]
-    #[doc = " to zero."]
     pub fn av_buffer_allocz(size: ::std::os::raw::c_int) -> *mut AVBufferRef;
 }
 extern "C" {
-    #[doc = " Create an AVBuffer from an existing array."]
-    #[doc = ""]
-    #[doc = " If this function is successful, data is owned by the AVBuffer. The caller may"]
-    #[doc = " only access data through the returned AVBufferRef and references derived from"]
-    #[doc = " it."]
-    #[doc = " If this function fails, data is left untouched."]
-    #[doc = " @param data   data array"]
-    #[doc = " @param size   size of data in bytes"]
-    #[doc = " @param free   a callback for freeing this buffer's data"]
-    #[doc = " @param opaque parameter to be got for processing or passed to free"]
-    #[doc = " @param flags  a combination of AV_BUFFER_FLAG_*"]
-    #[doc = ""]
-    #[doc = " @return an AVBufferRef referring to data on success, NULL on failure."]
     pub fn av_buffer_create(
         data: *mut u8,
         size: ::std::os::raw::c_int,
@@ -4914,19 +4897,6 @@ extern "C" {
     pub fn av_buffer_make_writable(buf: *mut *mut AVBufferRef) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[doc = " Reallocate a given buffer."]
-    #[doc = ""]
-    #[doc = " @param buf  a buffer reference to reallocate. On success, buf will be"]
-    #[doc = "             unreferenced and a new reference with the required size will be"]
-    #[doc = "             written in its place. On failure buf will be left untouched. *buf"]
-    #[doc = "             may be NULL, then a new buffer is allocated."]
-    #[doc = " @param size required new buffer size."]
-    #[doc = " @return 0 on success, a negative AVERROR on failure."]
-    #[doc = ""]
-    #[doc = " @note the buffer is actually reallocated with av_realloc() only if it was"]
-    #[doc = " initially allocated through av_buffer_realloc(NULL) and there is only one"]
-    #[doc = " reference to it (i.e. the one passed to this function). In all other cases"]
-    #[doc = " a new buffer is allocated and the data is copied."]
     pub fn av_buffer_realloc(
         buf: *mut *mut AVBufferRef,
         size: ::std::os::raw::c_int,
@@ -4956,13 +4926,6 @@ pub struct AVBufferPool {
     _unused: [u8; 0],
 }
 extern "C" {
-    #[doc = " Allocate and initialize a buffer pool."]
-    #[doc = ""]
-    #[doc = " @param size size of each buffer in this pool"]
-    #[doc = " @param alloc a function that will be used to allocate new buffers when the"]
-    #[doc = " pool is empty. May be NULL, then the default allocator will be used"]
-    #[doc = " (av_buffer_alloc())."]
-    #[doc = " @return newly created buffer pool on success, NULL on error."]
     pub fn av_buffer_pool_init(
         size: ::std::os::raw::c_int,
         alloc: ::std::option::Option<
@@ -4971,19 +4934,6 @@ extern "C" {
     ) -> *mut AVBufferPool;
 }
 extern "C" {
-    #[doc = " Allocate and initialize a buffer pool with a more complex allocator."]
-    #[doc = ""]
-    #[doc = " @param size size of each buffer in this pool"]
-    #[doc = " @param opaque arbitrary user data used by the allocator"]
-    #[doc = " @param alloc a function that will be used to allocate new buffers when the"]
-    #[doc = "              pool is empty. May be NULL, then the default allocator will be"]
-    #[doc = "              used (av_buffer_alloc())."]
-    #[doc = " @param pool_free a function that will be called immediately before the pool"]
-    #[doc = "                  is freed. I.e. after av_buffer_pool_uninit() is called"]
-    #[doc = "                  by the caller and all the frames are returned to the pool"]
-    #[doc = "                  and freed. It is intended to uninitialize the user opaque"]
-    #[doc = "                  data. May be NULL."]
-    #[doc = " @return newly created buffer pool on success, NULL on error."]
     pub fn av_buffer_pool_init2(
         size: ::std::os::raw::c_int,
         opaque: *mut ::std::os::raw::c_void,
@@ -7454,10 +7404,6 @@ impl Default for AVPacketSideData {
 #[doc = " packets, with no compressed data, containing only side data"]
 #[doc = " (e.g. to update some stream parameters at the end of encoding)."]
 #[doc = ""]
-#[doc = " AVPacket is one of the few structs in FFmpeg, whose size is a part of public"]
-#[doc = " ABI. Thus it may be allocated on stack and no new fields can be added to it"]
-#[doc = " without libavcodec and libavformat major bump."]
-#[doc = ""]
 #[doc = " The semantics of data ownership depends on the buf field."]
 #[doc = " If it is set, the packet data is dynamically allocated and is"]
 #[doc = " valid indefinitely until a call to av_packet_unref() reduces the"]
@@ -7469,6 +7415,12 @@ impl Default for AVPacketSideData {
 #[doc = " The side data is always allocated with av_malloc(), copied by"]
 #[doc = " av_packet_ref() and freed by av_packet_unref()."]
 #[doc = ""]
+#[doc = " sizeof(AVPacket) being a part of the public ABI is deprecated. once"]
+#[doc = " av_init_packet() is removed, new packets will only be able to be allocated"]
+#[doc = " with av_packet_alloc(), and new fields may be added to the end of the struct"]
+#[doc = " with a minor bump."]
+#[doc = ""]
+#[doc = " @see av_packet_alloc"]
 #[doc = " @see av_packet_ref"]
 #[doc = " @see av_packet_unref"]
 #[repr(C)]
@@ -7572,6 +7524,12 @@ extern "C" {
     #[doc = " initialized separately."]
     #[doc = ""]
     #[doc = " @param pkt packet"]
+    #[doc = ""]
+    #[doc = " @see av_packet_alloc"]
+    #[doc = " @see av_packet_unref"]
+    #[doc = ""]
+    #[doc = " @deprecated This function is deprecated. Once it's removed,"]
+    #[doc = "sizeof(AVPacket) will not be a part of the ABI anymore."]
     pub fn av_init_packet(pkt: *mut AVPacket);
 }
 extern "C" {
@@ -8187,7 +8145,7 @@ pub struct AVCodec {
     >,
     #[doc = " Private codec-specific defaults."]
     pub defaults: *const AVCodecDefault,
-    #[doc = " Initialize codec static data, called from avcodec_register()."]
+    #[doc = " Initialize codec static data, called from av_codec_iterate()."]
     #[doc = ""]
     #[doc = " This is not intended for time consuming operations as it is"]
     #[doc = " run for every codec regardless of that codec being used."]
@@ -8206,7 +8164,7 @@ pub struct AVCodec {
     #[doc = " Encode data to an AVPacket."]
     #[doc = ""]
     #[doc = " @param      avctx          codec context"]
-    #[doc = " @param      avpkt          output AVPacket (may contain a user-provided buffer)"]
+    #[doc = " @param      avpkt          output AVPacket"]
     #[doc = " @param[in]  frame          AVFrame containing the raw data to be encoded"]
     #[doc = " @param[out] got_packet_ptr encoder sets to 0 or 1 to indicate that a"]
     #[doc = "                            non-empty packet was returned in avpkt."]
@@ -8219,11 +8177,21 @@ pub struct AVCodec {
             got_packet_ptr: *mut ::std::os::raw::c_int,
         ) -> ::std::os::raw::c_int,
     >,
+    #[doc = " Decode picture or subtitle data."]
+    #[doc = ""]
+    #[doc = " @param      avctx          codec context"]
+    #[doc = " @param      outdata        codec type dependent output struct"]
+    #[doc = " @param[out] got_frame_ptr  decoder sets to 0 or 1 to indicate that a"]
+    #[doc = "                            non-empty frame or subtitle was returned in"]
+    #[doc = "                            outdata."]
+    #[doc = " @param[in]  avpkt          AVPacket containing the data to be decoded"]
+    #[doc = " @return amount of bytes read from the packet on success, negative error"]
+    #[doc = "         code on failure"]
     pub decode: ::std::option::Option<
         unsafe extern "C" fn(
-            arg1: *mut AVCodecContext,
+            avctx: *mut AVCodecContext,
             outdata: *mut ::std::os::raw::c_void,
-            outdata_size: *mut ::std::os::raw::c_int,
+            got_frame_ptr: *mut ::std::os::raw::c_int,
             avpkt: *mut AVPacket,
         ) -> ::std::os::raw::c_int,
     >,
@@ -9310,7 +9278,11 @@ pub struct AVCodecContext {
     #[doc = ""]
     #[doc = " @deprecated the custom get_buffer2() callback should always be"]
     #[doc = "   thread-safe. Thread-unsafe get_buffer2() implementations will be"]
-    #[doc = "   invalid once this field is removed."]
+    #[doc = "   invalid starting with LIBAVCODEC_VERSION_MAJOR=60; in other words,"]
+    #[doc = "   libavcodec will behave as if this field was always set to 1."]
+    #[doc = "   Callers that want to be forward compatible with future libavcodec"]
+    #[doc = "   versions should wrap access to this field in"]
+    #[doc = "     #if LIBAVCODEC_VERSION_MAJOR < 60"]
     pub thread_safe_callbacks: ::std::os::raw::c_int,
     #[doc = " The codec may call this to execute several independent things."]
     #[doc = " It will return only after finishing all tasks."]
@@ -9611,6 +9583,47 @@ pub struct AVCodecContext {
     #[doc = " - decoding: set by user"]
     #[doc = " - encoding: set by user"]
     pub export_side_data: ::std::os::raw::c_int,
+    #[doc = " This callback is called at the beginning of each packet to get a data"]
+    #[doc = " buffer for it."]
+    #[doc = ""]
+    #[doc = " The following field will be set in the packet before this callback is"]
+    #[doc = " called:"]
+    #[doc = " - size"]
+    #[doc = " This callback must use the above value to calculate the required buffer size,"]
+    #[doc = " which must padded by at least AV_INPUT_BUFFER_PADDING_SIZE bytes."]
+    #[doc = ""]
+    #[doc = " This callback must fill the following fields in the packet:"]
+    #[doc = " - data: alignment requirements for AVPacket apply, if any. Some architectures and"]
+    #[doc = "   encoders may benefit from having aligned data."]
+    #[doc = " - buf: must contain a pointer to an AVBufferRef structure. The packet's"]
+    #[doc = "   data pointer must be contained in it. See: av_buffer_create(), av_buffer_alloc(),"]
+    #[doc = "   and av_buffer_ref()."]
+    #[doc = ""]
+    #[doc = " If AV_CODEC_CAP_DR1 is not set then get_encode_buffer() must call"]
+    #[doc = " avcodec_default_get_encode_buffer() instead of providing a buffer allocated by"]
+    #[doc = " some other means."]
+    #[doc = ""]
+    #[doc = " The flags field may contain a combination of AV_GET_ENCODE_BUFFER_FLAG_ flags."]
+    #[doc = " They may be used for example to hint what use the buffer may get after being"]
+    #[doc = " created."]
+    #[doc = " Implementations of this callback may ignore flags they don't understand."]
+    #[doc = " If AV_GET_ENCODE_BUFFER_FLAG_REF is set in flags then the packet may be reused"]
+    #[doc = " (read and/or written to if it is writable) later by libavcodec."]
+    #[doc = ""]
+    #[doc = " This callback must be thread-safe, as when frame threading is used, it may"]
+    #[doc = " be called from multiple threads simultaneously."]
+    #[doc = ""]
+    #[doc = " @see avcodec_default_get_encode_buffer()"]
+    #[doc = ""]
+    #[doc = " - encoding: Set by libavcodec, user can override."]
+    #[doc = " - decoding: unused"]
+    pub get_encode_buffer: ::std::option::Option<
+        unsafe extern "C" fn(
+            s: *mut AVCodecContext,
+            pkt: *mut AVPacket,
+            flags: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+    >,
 }
 impl Default for AVCodecContext {
     fn default() -> Self {
@@ -9910,23 +9923,11 @@ extern "C" {
     pub fn avcodec_license() -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    #[doc = " Register the codec codec and initialize libavcodec."]
-    #[doc = ""]
-    #[doc = " @warning either this function or avcodec_register_all() must be called"]
-    #[doc = " before any other libavcodec functions."]
-    #[doc = ""]
-    #[doc = " @see avcodec_register_all()"]
+    #[doc = " @deprecated Calling this function is unnecessary."]
     pub fn avcodec_register(codec: *mut AVCodec);
 }
 extern "C" {
-    #[doc = " Register all the codecs, parsers and bitstream filters which were enabled at"]
-    #[doc = " configuration time. If you do not call this function you can select exactly"]
-    #[doc = " which formats you want to support, by using the individual registration"]
-    #[doc = " functions."]
-    #[doc = ""]
-    #[doc = " @see avcodec_register"]
-    #[doc = " @see av_register_codec_parser"]
-    #[doc = " @see av_register_bitstream_filter"]
+    #[doc = " @deprecated Calling this function is unnecessary."]
     pub fn avcodec_register_all();
 }
 extern "C" {
@@ -10033,7 +10034,6 @@ extern "C" {
     #[doc = " @ref avcodec_receive_frame())."]
     #[doc = ""]
     #[doc = " @code"]
-    #[doc = " avcodec_register_all();"]
     #[doc = " av_dict_set(&opts, \"b\", \"2.5M\", 0);"]
     #[doc = " codec = avcodec_find_decoder(AV_CODEC_ID_H264);"]
     #[doc = " if (!codec)"]
@@ -10089,6 +10089,16 @@ extern "C" {
     pub fn avcodec_default_get_buffer2(
         s: *mut AVCodecContext,
         frame: *mut AVFrame,
+        flags: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " The default callback for AVCodecContext.get_encode_buffer(). It is made public so"]
+    #[doc = " it can be called by custom get_encode_buffer() implementations for encoders without"]
+    #[doc = " AV_CODEC_CAP_DR1 set."]
+    pub fn avcodec_default_get_encode_buffer(
+        s: *mut AVCodecContext,
+        pkt: *mut AVPacket,
         flags: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
@@ -10795,7 +10805,9 @@ extern "C" {
     #[doc = "                            not be used."]
     #[doc = " @return          0 on success, negative error code on failure"]
     #[doc = ""]
-    #[doc = " @deprecated use avcodec_send_frame()/avcodec_receive_packet() instead"]
+    #[doc = " @deprecated use avcodec_send_frame()/avcodec_receive_packet() instead."]
+    #[doc = "             If allowed and required, set AVCodecContext.get_encode_buffer to"]
+    #[doc = "             a custom function to pass user supplied output buffers."]
     pub fn avcodec_encode_audio2(
         avctx: *mut AVCodecContext,
         avpkt: *mut AVPacket,
@@ -10836,7 +10848,9 @@ extern "C" {
     #[doc = "                            not be used."]
     #[doc = " @return          0 on success, negative error code on failure"]
     #[doc = ""]
-    #[doc = " @deprecated use avcodec_send_frame()/avcodec_receive_packet() instead"]
+    #[doc = " @deprecated use avcodec_send_frame()/avcodec_receive_packet() instead."]
+    #[doc = "             If allowed and required, set AVCodecContext.get_encode_buffer to"]
+    #[doc = "             a custom function to pass user supplied output buffers."]
     pub fn avcodec_encode_video2(
         avctx: *mut AVCodecContext,
         avpkt: *mut AVPacket,

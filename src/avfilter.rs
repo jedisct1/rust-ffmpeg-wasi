@@ -186,7 +186,7 @@ pub const EXIT_FAILURE: u32 = 1;
 pub const EXIT_SUCCESS: u32 = 0;
 pub const RAND_MAX: u32 = 2147483647;
 pub const LIBAVUTIL_VERSION_MAJOR: u32 = 56;
-pub const LIBAVUTIL_VERSION_MINOR: u32 = 67;
+pub const LIBAVUTIL_VERSION_MINOR: u32 = 68;
 pub const LIBAVUTIL_VERSION_MICRO: u32 = 100;
 pub const AV_HAVE_BIGENDIAN: u32 = 0;
 pub const AV_HAVE_FAST_UNALIGNED: u32 = 0;
@@ -4190,7 +4190,6 @@ pub struct AVBufferRef {
     #[doc = " this is the only reference to the buffer, in which case"]
     #[doc = " av_buffer_is_writable() returns 1."]
     pub data: *mut u8,
-    #[doc = " Size of data in bytes."]
     pub size: ::std::os::raw::c_int,
 }
 impl Default for AVBufferRef {
@@ -4199,30 +4198,12 @@ impl Default for AVBufferRef {
     }
 }
 extern "C" {
-    #[doc = " Allocate an AVBuffer of the given size using av_malloc()."]
-    #[doc = ""]
-    #[doc = " @return an AVBufferRef of given size or NULL when out of memory"]
     pub fn av_buffer_alloc(size: ::std::os::raw::c_int) -> *mut AVBufferRef;
 }
 extern "C" {
-    #[doc = " Same as av_buffer_alloc(), except the returned buffer will be initialized"]
-    #[doc = " to zero."]
     pub fn av_buffer_allocz(size: ::std::os::raw::c_int) -> *mut AVBufferRef;
 }
 extern "C" {
-    #[doc = " Create an AVBuffer from an existing array."]
-    #[doc = ""]
-    #[doc = " If this function is successful, data is owned by the AVBuffer. The caller may"]
-    #[doc = " only access data through the returned AVBufferRef and references derived from"]
-    #[doc = " it."]
-    #[doc = " If this function fails, data is left untouched."]
-    #[doc = " @param data   data array"]
-    #[doc = " @param size   size of data in bytes"]
-    #[doc = " @param free   a callback for freeing this buffer's data"]
-    #[doc = " @param opaque parameter to be got for processing or passed to free"]
-    #[doc = " @param flags  a combination of AV_BUFFER_FLAG_*"]
-    #[doc = ""]
-    #[doc = " @return an AVBufferRef referring to data on success, NULL on failure."]
     pub fn av_buffer_create(
         data: *mut u8,
         size: ::std::os::raw::c_int,
@@ -4278,19 +4259,6 @@ extern "C" {
     pub fn av_buffer_make_writable(buf: *mut *mut AVBufferRef) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    #[doc = " Reallocate a given buffer."]
-    #[doc = ""]
-    #[doc = " @param buf  a buffer reference to reallocate. On success, buf will be"]
-    #[doc = "             unreferenced and a new reference with the required size will be"]
-    #[doc = "             written in its place. On failure buf will be left untouched. *buf"]
-    #[doc = "             may be NULL, then a new buffer is allocated."]
-    #[doc = " @param size required new buffer size."]
-    #[doc = " @return 0 on success, a negative AVERROR on failure."]
-    #[doc = ""]
-    #[doc = " @note the buffer is actually reallocated with av_realloc() only if it was"]
-    #[doc = " initially allocated through av_buffer_realloc(NULL) and there is only one"]
-    #[doc = " reference to it (i.e. the one passed to this function). In all other cases"]
-    #[doc = " a new buffer is allocated and the data is copied."]
     pub fn av_buffer_realloc(
         buf: *mut *mut AVBufferRef,
         size: ::std::os::raw::c_int,
@@ -4320,13 +4288,6 @@ pub struct AVBufferPool {
     _unused: [u8; 0],
 }
 extern "C" {
-    #[doc = " Allocate and initialize a buffer pool."]
-    #[doc = ""]
-    #[doc = " @param size size of each buffer in this pool"]
-    #[doc = " @param alloc a function that will be used to allocate new buffers when the"]
-    #[doc = " pool is empty. May be NULL, then the default allocator will be used"]
-    #[doc = " (av_buffer_alloc())."]
-    #[doc = " @return newly created buffer pool on success, NULL on error."]
     pub fn av_buffer_pool_init(
         size: ::std::os::raw::c_int,
         alloc: ::std::option::Option<
@@ -4335,19 +4296,6 @@ extern "C" {
     ) -> *mut AVBufferPool;
 }
 extern "C" {
-    #[doc = " Allocate and initialize a buffer pool with a more complex allocator."]
-    #[doc = ""]
-    #[doc = " @param size size of each buffer in this pool"]
-    #[doc = " @param opaque arbitrary user data used by the allocator"]
-    #[doc = " @param alloc a function that will be used to allocate new buffers when the"]
-    #[doc = "              pool is empty. May be NULL, then the default allocator will be"]
-    #[doc = "              used (av_buffer_alloc())."]
-    #[doc = " @param pool_free a function that will be called immediately before the pool"]
-    #[doc = "                  is freed. I.e. after av_buffer_pool_uninit() is called"]
-    #[doc = "                  by the caller and all the frames are returned to the pool"]
-    #[doc = "                  and freed. It is intended to uninitialize the user opaque"]
-    #[doc = "                  data. May be NULL."]
-    #[doc = " @return newly created buffer pool on success, NULL on error."]
     pub fn av_buffer_pool_init2(
         size: ::std::os::raw::c_int,
         opaque: *mut ::std::os::raw::c_void,

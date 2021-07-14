@@ -17,7 +17,4 @@ ffmpeg-wasi = "0"
 
 ```rust
 use ffmpeg_wasi::*;
-
-#[global_allocator]
-static ALLOCATOR: FFMpegAllocator = FFMpegAllocator;
 ```

@@ -2,7 +2,7 @@
 //!
 //! This crate bundles FFMPEG's `avcodec` and `avformat` libraries, precompiled for WebAssembly. No native installation required.
 //!
-//! Compatible with Fastly's Compute@Edge.
+//! Compatible with Fastly Compute.
 //!
 //! These are *low-level* bindings, directly exposing the original C functions to Rust.
 //!

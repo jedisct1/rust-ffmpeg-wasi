@@ -2,7 +2,7 @@
 
 This crate bundles FFMPEG's libraries, precompiled for WebAssembly. No native installation required.
 
-Compatible with Fastly's Compute@Edge.
+Compatible with Fastly Compute.
 
 Includes VP9 and AV1 encoders.
 

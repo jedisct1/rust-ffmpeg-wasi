@@ -7,8 +7,6 @@ pub fn main() {
     println!("cargo:rustc-link-lib=static=avformat");
     println!("cargo:rustc-link-lib=static=avutil");
     println!("cargo:rustc-link-lib=static=swscale");
-    println!("cargo:rustc-link-lib=static=c-wasm");
-    println!("cargo:rustc-link-lib=static=c-builtins");
     println!("cargo:rustc-link-lib=static=vpx");
     println!("cargo:rustc-link-lib=static=aom");
     println!("cargo:rustc-link-search=native={}/wasm-libs", src_dir);

@@ -1,6 +1,6 @@
 [package]
 name = "ffmpeg-wasi"
-version = "0.1.12"
+version = "0.1.13"
 authors = ["Frank Denis <github@pureftpd.org>"]
 edition = "2018"
 description = "FFMPEG for WebAssembly/WASI"
